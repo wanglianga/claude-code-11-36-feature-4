@@ -406,3 +406,248 @@ class AuditLog(Base):
     entity_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
     detail: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Sample lineage integrity & analysis usability certification
+# ---------------------------------------------------------------------------
+#
+# Design notes
+# ------------
+# * ``sample_evidence`` is the append-only sampling evidence store. Every row
+#   keeps the raw payload, when the event actually happened (``occurred_at``),
+#   when the service received it (``received_at``), who signed it
+#   (``issued_by``) and the revision chain. Corrections create ``revision+1``
+#   and deactivate the superseded row; nothing is rewritten.
+# * ``container_relations`` is the container graph: sample / aliquot / pool /
+#   remainder parent-child edges with validity intervals. An aliquot may never
+#   belong to two mutually exclusive containers over the same period; a late
+#   conflicting record freezes the affected branch instead of overwriting the
+#   confirmed chain in receipt order.
+# * ``protocol_constraints`` is the versioned constraint book per assay
+#   purpose (temperature band, duration, aliquot count, minimum remaining
+#   volume, exception rules, evidence-mode requirements).
+# * ``usability_certifications`` freezes, per lab report, the verdict plus the
+#   exact container chain, temperature evidence, constraint version and
+#   reasons it depends on. Re-adjudication creates a new version; old versions
+#   stay readable so historical cohort runs keep their original basis.
+# * ``cohort_run_refs`` / ``analysis_references`` are the analysis reference
+#   book: new cohort runs may only select ``analysis_ready`` certifications;
+#   references pin the certification version chosen at selection time.
+
+
+class SampleEvidence(Base):
+    """One piece of sampling evidence (registration, barcode, aliquot, merge,
+    handover, inventory, lab report or temperature series)."""
+
+    __tablename__ = "sample_evidence"
+    __table_args__ = (
+        UniqueConstraint("center_id", "evidence_uid", "revision"),
+        Index("ix_sample_evidence_type", "evidence_type", "active"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    center_id: Mapped[int] = mapped_column(ForeignKey("centers.id"))
+    evidence_uid: Mapped[str] = mapped_column(String(160))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    evidence_type: Mapped[str] = mapped_column(String(40))
+    # sampling_registration|container_barcode|aliquot|merge|handover|inventory|
+    # lab_report|temperature_series
+    payload: Mapped[dict] = mapped_column(JSONB)
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    # When the physical/logical event actually happened (issuer's clock).
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # When this service received the record.
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # Signing party (person, device or organisation unit) that issued it.
+    issued_by: Mapped[str] = mapped_column(String(120))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    supersedes_id: Mapped[int | None] = mapped_column(
+        ForeignKey("sample_evidence.id"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Container(Base):
+    """A physical container: root sample, aliquot, pool or remainder."""
+
+    __tablename__ = "containers"
+    __table_args__ = (UniqueConstraint("center_id", "barcode"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    center_id: Mapped[int] = mapped_column(ForeignKey("centers.id"))
+    barcode: Mapped[str] = mapped_column(String(120))
+    kind: Mapped[str] = mapped_column(String(20))  # sample|aliquot|pool|remainder
+    # Study subject reference as printed on the sampling registration; pools
+    # span several subjects and keep this empty.
+    subject_ref: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    # Current nominal content volume in microlitres (None when unknown).
+    volume_ul: Mapped[float | None] = mapped_column(Numeric(14, 3), nullable=True)
+    state: Mapped[str] = mapped_column(String(20), default="active")
+    # active|consumed|mislabeled
+    # Evidence collection mode inherited from the centre at registration:
+    # "event" (full event graph, device logs) or "interval" (daily inventory
+    # plus signed handovers). Recorded on the container so a later centre
+    # reconfiguration cannot rewrite the evidentiary class of old material.
+    collection_mode: Mapped[str] = mapped_column(String(10), default="event")
+    registered_evidence_id: Mapped[int | None] = mapped_column(
+        ForeignKey("sample_evidence.id"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContainerRelation(Base):
+    """Parent-child edge with a validity interval.
+
+    ``state`` lifecycle: ``confirmed`` -> (``frozen`` on a late conflicting
+    record) -> back to ``confirmed`` or to ``rejected`` by curator resolution.
+    ``superseded`` marks edges derived from an evidence revision that has
+    since been corrected.
+    """
+
+    __tablename__ = "container_relations"
+    __table_args__ = (
+        Index("ix_relation_child", "child_container_id", "state"),
+        Index("ix_relation_parent", "parent_container_id", "state"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    parent_container_id: Mapped[int] = mapped_column(ForeignKey("containers.id"))
+    child_container_id: Mapped[int] = mapped_column(ForeignKey("containers.id"))
+    relation_type: Mapped[str] = mapped_column(String(20))  # aliquot|merge|remainder
+    quantity_ul: Mapped[float | None] = mapped_column(Numeric(14, 3), nullable=True)
+    parent_remaining_after_ul: Mapped[float | None] = mapped_column(
+        Numeric(14, 3), nullable=True
+    )
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    valid_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    evidence_id: Mapped[int] = mapped_column(ForeignKey("sample_evidence.id"))
+    state: Mapped[str] = mapped_column(String(20), default="confirmed")
+    # confirmed|frozen|rejected|superseded
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GraphIssue(Base):
+    """A conflict or rejected correction on the container graph."""
+
+    __tablename__ = "graph_issues"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    issue_type: Mapped[str] = mapped_column(String(40))
+    # late_aliquot_conflict|quantity_conflict|pool_split_rejected|mislabel
+    status: Mapped[str] = mapped_column(String(20), default="open")  # open|resolved
+    container_ids: Mapped[list] = mapped_column(JSONB, default=list)
+    relation_ids: Mapped[list] = mapped_column(JSONB, default=list)
+    evidence_ids: Mapped[list] = mapped_column(JSONB, default=list)
+    detail: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_by: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    resolved_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolution: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+
+class ProtocolConstraint(Base):
+    """Constraint book: what a given assay purpose tolerates."""
+
+    __tablename__ = "protocol_constraints"
+    __table_args__ = (UniqueConstraint("assay_purpose", "version"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    protocol_revision_id: Mapped[int | None] = mapped_column(
+        ForeignKey("protocol_revisions.id"), nullable=True
+    )
+    assay_purpose: Mapped[str] = mapped_column(String(60))
+    version: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20), default="draft")  # draft|approved|retired
+    temp_min_c: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    temp_max_c: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    max_duration_hours: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    max_aliquot_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    min_remaining_volume_ul: Mapped[float | None] = mapped_column(Numeric(14, 3), nullable=True)
+    clock_skew_tolerance_seconds: Mapped[int] = mapped_column(Integer, default=300)
+    # High-sensitivity endpoints refuse interval (inventory-only) evidence.
+    requires_event_graph: Mapped[bool] = mapped_column(Boolean, default=False)
+    exception_rules: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_by: Mapped[str] = mapped_column(String(80))
+    approved_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class UsabilityCertification(Base):
+    """A frozen usability verdict for one lab report, versioned."""
+
+    __tablename__ = "usability_certifications"
+    __table_args__ = (UniqueConstraint("center_id", "report_uid", "cert_version"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    report_uid: Mapped[str] = mapped_column(String(160))
+    lab_report_evidence_id: Mapped[int] = mapped_column(ForeignKey("sample_evidence.id"))
+    center_id: Mapped[int] = mapped_column(ForeignKey("centers.id"))
+    container_id: Mapped[int | None] = mapped_column(ForeignKey("containers.id"), nullable=True)
+    subject_refs: Mapped[list] = mapped_column(JSONB, default=list)
+    assay_purpose: Mapped[str] = mapped_column(String(60))
+    verdict: Mapped[str] = mapped_column(String(30))
+    # analysis_ready|exploratory_only|lineage_pending|unusable
+    reason_codes: Mapped[list] = mapped_column(JSONB, default=list)
+    constraint_id: Mapped[int | None] = mapped_column(
+        ForeignKey("protocol_constraints.id"), nullable=True
+    )
+    cert_version: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20), default="active")  # active|superseded
+    # The frozen basis: container chain, temperature evidence and intervals,
+    # constraint version, usage restrictions and human-readable reasons.
+    frozen_basis: Mapped[dict] = mapped_column(JSONB, default=dict)
+    basis_hash: Mapped[str] = mapped_column(String(64))
+    # Denormalised chain container ids so "which certifications touch this
+    # container" stays a simple indexed JSONB containment query.
+    chain_container_ids: Mapped[list] = mapped_column(JSONB, default=list)
+    usage_restrictions: Mapped[list] = mapped_column(JSONB, default=list)
+    created_by: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CohortRunRef(Base):
+    """Reference-book handle for one cohort run that selects certifications."""
+
+    __tablename__ = "cohort_run_refs"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    label: Mapped[str] = mapped_column(String(160), unique=True)
+    screening_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("screening_runs.id"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(20), default="open")  # open|locked
+    created_by: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    locked_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class AnalysisReference(Base):
+    """One certification selected into one cohort run.
+
+    The pinned ``certification_id`` never moves silently: a later
+    re-adjudication creates a new certification version and leaves this row
+    pointing at the version the run actually selected. References in open
+    runs are paused when the active verdict for their report drops below
+    ``analysis_ready``; references in locked runs are historical and are
+    never modified.
+    """
+
+    __tablename__ = "analysis_references"
+    __table_args__ = (UniqueConstraint("cohort_run_ref_id", "certification_id"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    cohort_run_ref_id: Mapped[int] = mapped_column(ForeignKey("cohort_run_refs.id"))
+    certification_id: Mapped[int] = mapped_column(ForeignKey("usability_certifications.id"))
+    center_id: Mapped[int] = mapped_column(ForeignKey("centers.id"))
+    report_uid: Mapped[str] = mapped_column(String(160))
+    verdict_at_selection: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(20), default="active")  # active|paused
+    pause_reason: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    selected_by: Mapped[str] = mapped_column(String(80))
+    selected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    history: Mapped[list] = mapped_column(JSONB, default=list)

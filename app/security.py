@@ -23,9 +23,17 @@ DEMO_USERS = [
     ("reviewer", "reviewer-token", "rule_reviewer", None),
     ("analysis.lead", "analysis-token", "analysis_lead", None),
     ("privacy.admin", "privacy-token", "privacy_admin", None),
+    ("sample.curator", "sample-curator-token", "sample_curator", None),
 ]
 
-ALL_ROLES = {"admin", "center_uploader", "rule_reviewer", "analysis_lead", "privacy_admin"}
+ALL_ROLES = {
+    "admin",
+    "center_uploader",
+    "rule_reviewer",
+    "analysis_lead",
+    "privacy_admin",
+    "sample_curator",
+}
 
 
 def hash_token(token: str) -> str:

@@ -73,3 +73,70 @@ class ReportIn(BaseModel):
 class ConsentWithdrawalIn(BaseModel):
     allow_retention: bool = False
     withdrawal_date: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Sample lineage & usability certification
+# ---------------------------------------------------------------------------
+
+
+class EvidenceIn(BaseModel):
+    center_code: str
+    evidence_type: Literal[
+        "sampling_registration",
+        "container_barcode",
+        "aliquot",
+        "merge",
+        "handover",
+        "inventory",
+        "lab_report",
+        "temperature_series",
+    ]
+    evidence_uid: str = Field(min_length=1, max_length=160)
+    # When the event actually happened (ISO-8601, issuer's clock).
+    occurred_at: str
+    issued_by: str = Field(min_length=1, max_length=120)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class ConstraintIn(BaseModel):
+    assay_purpose: str = Field(min_length=1, max_length=60)
+    protocol_revision_id: int | None = None
+    temp_min_c: float | None = None
+    temp_max_c: float | None = None
+    max_duration_hours: float | None = None
+    max_aliquot_count: int | None = None
+    min_remaining_volume_ul: float | None = None
+    clock_skew_tolerance_seconds: int = 300
+    requires_event_graph: bool = False
+    exception_rules: dict[str, Any] = Field(default_factory=dict)
+
+
+class MislabelIn(BaseModel):
+    reason: str = Field(min_length=1, max_length=300)
+
+
+class PoolSplitIn(BaseModel):
+    children: list[dict[str, Any]]
+    # Measured per-child volumes / aliquot quality proof. Without it a pool
+    # stays irreversible and the split is refused.
+    volume_evidence: dict[str, Any] | None = None
+
+
+class ResolveIssueIn(BaseModel):
+    keep_relation_ids: list[int]
+    note: str | None = None
+
+
+class CohortRunRefIn(BaseModel):
+    label: str = Field(min_length=1, max_length=160)
+    screening_run_id: int | None = None
+
+
+class SelectReferencesIn(BaseModel):
+    certification_ids: list[int]
+
+
+class ReadjudicateIn(BaseModel):
+    assay_purpose: str | None = None
+    report_uid: str | None = None

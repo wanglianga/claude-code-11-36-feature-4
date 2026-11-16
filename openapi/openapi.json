@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Clinical Cohort Recompute Service",
-    "description": "Multi-centre clinical cohort screening with full and incremental recomputation, unit/code normalization, reconciliation gates and immutable versioned snapshots and reports. All patients are fictional.",
+    "description": "Multi-centre clinical cohort screening with full and incremental recomputation, unit/code normalization, reconciliation gates and immutable versioned snapshots and reports. Includes a sample lineage integrity and analysis usability certification service (sampling evidence store, container graph, constraint book, usability certifications and the analysis reference book) under /lineage. All patients are fictional.",
     "version": "1.0.0"
   },
   "paths": {
@@ -2008,6 +2008,1588 @@
         }
       }
     },
+    "/lineage/evidence": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Submit Evidence",
+        "operationId": "submit_evidence_lineage_evidence_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "List Evidence",
+        "operationId": "list_evidence_lineage_evidence_get",
+        "parameters": [
+          {
+            "name": "center_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Center Code"
+            }
+          },
+          {
+            "name": "evidence_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Evidence Type"
+            }
+          },
+          {
+            "name": "container_barcode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Container Barcode"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Active Only"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/evidence/{evidence_id}": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Get Evidence",
+        "operationId": "get_evidence_lineage_evidence__evidence_id__get",
+        "parameters": [
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Evidence Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/containers": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "List Containers",
+        "operationId": "list_containers_lineage_containers_get",
+        "parameters": [
+          {
+            "name": "center_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Center Code"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "subject_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Ref"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/containers/{container_id}": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Get Container",
+        "operationId": "get_container_lineage_containers__container_id__get",
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Container Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/containers/{container_id}/lineage": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Container Lineage",
+        "description": "Which sample(s) did this container belong to at time ``at``?",
+        "operationId": "container_lineage_lineage_containers__container_id__lineage_get",
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Container Id"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO-8601 moment; default now",
+              "title": "At"
+            },
+            "description": "ISO-8601 moment; default now"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/containers/{container_id}/mislabel": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Judge Mislabel",
+        "description": "Judge a container mislabelled; downstream certifications are\nre-adjudicated and open cohort-run references are paused, while locked\nruns keep their original certification.",
+        "operationId": "judge_mislabel_lineage_containers__container_id__mislabel_post",
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Container Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MislabelIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/containers/{container_id}/split": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Split Pool",
+        "description": "Attempt to split a pool back into sources. Without measured remaining\nvolumes and aliquot-quality evidence the pool stays irreversible.",
+        "operationId": "split_pool_lineage_containers__container_id__split_post",
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Container Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PoolSplitIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/graph-issues": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "List Graph Issues",
+        "operationId": "list_graph_issues_lineage_graph_issues_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/graph-issues/{issue_id}/resolve": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Resolve Graph Issue",
+        "description": "Resolve a frozen branch: confirm the relations to keep, reject the\nrest. The confirmed chain is never silently overwritten by receipt order.",
+        "operationId": "resolve_graph_issue_lineage_graph_issues__issue_id__resolve_post",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Issue Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveIssueIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/constraints": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Create Constraint",
+        "operationId": "create_constraint_lineage_constraints_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConstraintIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "List Constraints",
+        "operationId": "list_constraints_lineage_constraints_get",
+        "parameters": [
+          {
+            "name": "assay_purpose",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assay Purpose"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/constraints/{constraint_id}/approve": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Approve Constraint",
+        "operationId": "approve_constraint_lineage_constraints__constraint_id__approve_post",
+        "parameters": [
+          {
+            "name": "constraint_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Constraint Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/certifications": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "List Certifications",
+        "operationId": "list_certifications_lineage_certifications_get",
+        "parameters": [
+          {
+            "name": "verdict",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Verdict"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "report_uid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Report Uid"
+            }
+          },
+          {
+            "name": "subject_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Ref"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/certifications/{certification_id}": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Get Certification",
+        "description": "Full traceability: original evidence, container relations, temperature\nintervals, constraint version, usage restrictions and reference impact.",
+        "operationId": "get_certification_lineage_certifications__certification_id__get",
+        "parameters": [
+          {
+            "name": "certification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Certification Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/lab-reports/{evidence_id}/adjudicate": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Adjudicate Lab Report",
+        "operationId": "adjudicate_lab_report_lineage_lab_reports__evidence_id__adjudicate_post",
+        "parameters": [
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Evidence Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/certifications/readjudicate": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Readjudicate",
+        "description": "Bulk re-adjudication, e.g. after a constraint-book rule change. Old\ncertification versions are preserved; cohort runs keep their pinned basis.",
+        "operationId": "readjudicate_lineage_certifications_readjudicate_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadjudicateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/cohort-runs": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Create Cohort Run Ref",
+        "operationId": "create_cohort_run_ref_lineage_cohort_runs_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CohortRunRefIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "List Cohort Run Refs",
+        "operationId": "list_cohort_run_refs_lineage_cohort_runs_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/cohort-runs/{run_ref_id}": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Get Cohort Run Ref",
+        "operationId": "get_cohort_run_ref_lineage_cohort_runs__run_ref_id__get",
+        "parameters": [
+          {
+            "name": "run_ref_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Ref Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/cohort-runs/{run_ref_id}/references": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Select References",
+        "description": "Select certifications into an open cohort run. Only ``analysis_ready``\nactive certifications are accepted.",
+        "operationId": "select_references_lineage_cohort_runs__run_ref_id__references_post",
+        "parameters": [
+          {
+            "name": "run_ref_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Ref Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectReferencesIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/cohort-runs/{run_ref_id}/references/{reference_id}/resume": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Resume Reference",
+        "operationId": "resume_reference_lineage_cohort_runs__run_ref_id__references__reference_id__resume_post",
+        "parameters": [
+          {
+            "name": "run_ref_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Ref Id"
+            }
+          },
+          {
+            "name": "reference_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Reference Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/cohort-runs/{run_ref_id}/lock": {
+      "post": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Lock Cohort Run Ref",
+        "description": "Lock the run's references. Locked runs are historical: later\nre-adjudications and mislabel judgements never modify them.",
+        "operationId": "lock_cohort_run_ref_lineage_cohort_runs__run_ref_id__lock_post",
+        "parameters": [
+          {
+            "name": "run_ref_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Ref Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lineage/subjects/{subject_ref}/usability": {
+      "get": {
+        "tags": [
+          "lineage"
+        ],
+        "summary": "Subject Usability",
+        "description": "Every lab report certification for one subject. A downgrade lands on\nthe affected assay only — the subject as a whole is never excluded.",
+        "operationId": "subject_usability_lineage_subjects__subject_ref__usability_get",
+        "parameters": [
+          {
+            "name": "subject_ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subject Ref"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -2182,6 +3764,32 @@
         ],
         "title": "CenterIn"
       },
+      "CohortRunRefIn": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "screening_run_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Run Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "CohortRunRefIn"
+      },
       "ConsentWithdrawalIn": {
         "properties": {
           "allow_retention": {
@@ -2204,6 +3812,102 @@
         "type": "object",
         "title": "ConsentWithdrawalIn"
       },
+      "ConstraintIn": {
+        "properties": {
+          "assay_purpose": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Assay Purpose"
+          },
+          "protocol_revision_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol Revision Id"
+          },
+          "temp_min_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Min C"
+          },
+          "temp_max_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temp Max C"
+          },
+          "max_duration_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Duration Hours"
+          },
+          "max_aliquot_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Aliquot Count"
+          },
+          "min_remaining_volume_ul": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Remaining Volume Ul"
+          },
+          "clock_skew_tolerance_seconds": {
+            "type": "integer",
+            "title": "Clock Skew Tolerance Seconds",
+            "default": 300
+          },
+          "requires_event_graph": {
+            "type": "boolean",
+            "title": "Requires Event Graph",
+            "default": false
+          },
+          "exception_rules": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Exception Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assay_purpose"
+        ],
+        "title": "ConstraintIn"
+      },
       "CutoffIn": {
         "properties": {
           "label": {
@@ -2224,6 +3928,58 @@
           "upload_ids"
         ],
         "title": "CutoffIn"
+      },
+      "EvidenceIn": {
+        "properties": {
+          "center_code": {
+            "type": "string",
+            "title": "Center Code"
+          },
+          "evidence_type": {
+            "type": "string",
+            "enum": [
+              "sampling_registration",
+              "container_barcode",
+              "aliquot",
+              "merge",
+              "handover",
+              "inventory",
+              "lab_report",
+              "temperature_series"
+            ],
+            "title": "Evidence Type"
+          },
+          "evidence_uid": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Evidence Uid"
+          },
+          "occurred_at": {
+            "type": "string",
+            "title": "Occurred At"
+          },
+          "issued_by": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Issued By"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "center_code",
+          "evidence_type",
+          "evidence_uid",
+          "occurred_at",
+          "issued_by"
+        ],
+        "title": "EvidenceIn"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2305,6 +4061,50 @@
         ],
         "title": "MappingIn"
       },
+      "MislabelIn": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "MislabelIn"
+      },
+      "PoolSplitIn": {
+        "properties": {
+          "children": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Children"
+          },
+          "volume_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Evidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "children"
+        ],
+        "title": "PoolSplitIn"
+      },
       "ProtocolIn": {
         "properties": {
           "name": {
@@ -2329,6 +4129,34 @@
         ],
         "title": "ProtocolIn"
       },
+      "ReadjudicateIn": {
+        "properties": {
+          "assay_purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assay Purpose"
+          },
+          "report_uid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Uid"
+          }
+        },
+        "type": "object",
+        "title": "ReadjudicateIn"
+      },
       "ReportIn": {
         "properties": {
           "analysis_run_id": {
@@ -2352,6 +4180,33 @@
           "analysis_run_id"
         ],
         "title": "ReportIn"
+      },
+      "ResolveIssueIn": {
+        "properties": {
+          "keep_relation_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Keep Relation Ids"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keep_relation_ids"
+        ],
+        "title": "ResolveIssueIn"
       },
       "RevisionIn": {
         "properties": {
@@ -2458,6 +4313,22 @@
           "cutoff_batch_id"
         ],
         "title": "RunIn"
+      },
+      "SelectReferencesIn": {
+        "properties": {
+          "certification_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Certification Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "certification_ids"
+        ],
+        "title": "SelectReferencesIn"
       },
       "UploadIn": {
         "properties": {

@@ -14,7 +14,7 @@ URL := postgresql+psycopg://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)
 export COHORT_DATABASE_URL ?= $(URL)/$(DB_NAME)
 export COHORT_SUBJECT_SALT ?= dev-only-salt-change-me
 
-.PHONY: venv install install-dev db db-test serve demo test samples openapi docker-up docker-down
+.PHONY: venv install install-dev db db-test serve demo demo-lineage test samples openapi docker-up docker-down
 
 venv:
 	python3 -m venv .venv
@@ -36,6 +36,9 @@ serve: db
 
 demo: db
 	$(PY) -m scripts.seed_demo
+
+demo-lineage: db
+	$(PY) -m scripts.seed_lineage_demo
 
 test: db-test
 	COHORT_DATABASE_URL=$(URL)/$(DB_TEST) $(PY) -m pytest tests -q

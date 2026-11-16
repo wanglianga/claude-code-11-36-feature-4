@@ -24,6 +24,7 @@ TOKENS = {
     "server": "analysis-token",
     "reviewer": "reviewer-token",
     "privacy": "privacy-token",
+    "curator": "sample-curator-token",
     "north": "center-north-token",
     "south": "center-south-token",
     "east": "center-east-token",

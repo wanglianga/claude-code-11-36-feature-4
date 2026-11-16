@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from .db import Base, SessionLocal, engine, get_db
 from .models import User
-from .routers import cohort, privacy, runs, setup, uploads
+from .routers import cohort, lineage, privacy, runs, setup, uploads
 from .security import DEMO_USERS, get_current_user, seed_users
 
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +42,11 @@ app = FastAPI(
     description=(
         "Multi-centre clinical cohort screening with full and incremental "
         "recomputation, unit/code normalization, reconciliation gates and "
-        "immutable versioned snapshots and reports. All patients are fictional."
+        "immutable versioned snapshots and reports. Includes a sample lineage "
+        "integrity and analysis usability certification service (sampling "
+        "evidence store, container graph, constraint book, usability "
+        "certifications and the analysis reference book) under /lineage. "
+        "All patients are fictional."
     ),
     lifespan=lifespan,
 )
@@ -52,6 +56,7 @@ app.include_router(uploads.router)
 app.include_router(runs.router)
 app.include_router(cohort.router)
 app.include_router(privacy.router)
+app.include_router(lineage.router)
 
 
 @app.get("/health")
